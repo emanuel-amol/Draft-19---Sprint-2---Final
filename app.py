@@ -490,7 +490,7 @@ context.load_cert_chain(certfile="security_protocols/TLS/cert/cert.pem",
 def run_main():
     #app.run(host="192.168.68.1", port=5000, ssl_context=("security_protocols/TLS/cert/cert.pem", "security_protocols/TLS/cert/key.pem"))
     #app.run(host="192.168.68.1", port=5000)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
 
 
 
