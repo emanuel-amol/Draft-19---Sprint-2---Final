@@ -19,7 +19,7 @@ from security_protocols.jwt.auth import jwt_required
 from security_protocols.jwt.jwt_handler import generate_jwt
 from flask import make_response
 
-
+from security_protocols.password_reset.email_sender import send_password_reset_email
 
 from datetime import datetime
 import os
