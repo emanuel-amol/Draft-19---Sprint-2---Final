@@ -276,7 +276,7 @@ def forgot_password():
     return render_template("forgot_password.html")
 
 @app.route("/reset-password/<token>", methods=["GET", "POST"])
-@limiter.limit("5 per minute")  # Prevent abuse
+@limiter.limit("5 per minute")
 def reset_password(token):
     # Verify the token
     from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -302,42 +302,49 @@ def reset_password(token):
         if new_password != confirm_password:
             return render_template("reset_password.html", token=token, error="Passwords do not match.")
         
-        # Check if password is in breach database
-        from security_protocols.passwords.hibp_checker import check_pwned_password
-        if check_pwned_password(new_password):
-            return render_template("reset_password.html", token=token, 
-                                error="This password has been found in data breaches. Please choose a more secure password.")
-        
-        # Get the user
-        user = get_user_by_email(email)
-        if not user:
-            return render_template("reset_password_error.html", error="User not found.")
-        
         try:
-            # Hash the password using our password hasher
-            from security_protocols.passwords.password_hasher import hash_password
-            hashed_password = hash_password(new_password)
+            # Check if password is in breach database
+            from security_protocols.passwords.hibp_checker import check_pwned_password
+            if check_pwned_password(new_password):
+                return render_template("reset_password.html", token=token, 
+                                    error="This password has been found in data breaches. Please choose a more secure password.")
             
-            # Update the hashed password in our users table
-            supabase.table("users").update({"hashed_pw": hashed_password}).eq("id", user["id"]).execute()
+            # Get the user
+            user = get_user_by_email(email)
+            if not user:
+                return render_template("reset_password_error.html", error="User not found.")
             
-            # Update the password in Supabase Auth
-            supabase.auth.admin.update_user_by_id(
-                user["id"],
-                {"password": new_password}
-            )
-            
-            # Log the password reset
-            log_activity(user["id"], "Password reset successful", email=email)
-            
-            # Redirect to success page or login
-            return render_template("reset_password_success.html")
-            
-        except Exception as e:
-            print(f"Password reset error: {e}")
-            log_activity(None, f"Password reset failed: {str(e)}", email=email)
+            try:
+                # Hash the password using our password hasher
+                from security_protocols.passwords.password_hasher import hash_password
+                hashed_password = hash_password(new_password)
+                
+                # Update the hashed password in our users table
+                supabase.table("users").update({"hashed_pw": hashed_password}).eq("id", user["id"]).execute()
+                
+                # Update the password in Supabase Auth
+                supabase.auth.admin.update_user_by_id(
+                    user["id"],
+                    {"password": new_password}
+                )
+                
+                # Log the password reset
+                log_activity(user["id"], "Password reset successful", email=email)
+                
+                # Redirect to success page or login
+                return render_template("reset_password_success.html")
+                
+            except Exception as e:
+                # Log the specific error for debugging
+                print(f"Password reset error: {e}")
+                log_activity(None, f"Password reset failed: {str(e)}", email=email)
+                return render_template("reset_password.html", token=token, 
+                                    error=f"An error occurred: {str(e)}")
+        except Exception as outer_e:
+            # Log any outer exceptions for debugging
+            print(f"Outer password reset error: {outer_e}")
             return render_template("reset_password.html", token=token, 
-                                  error="An error occurred. Please try again.")
+                                error=f"An error occurred: {str(outer_e)}")
     
     # GET request - show the reset form
     return render_template("reset_password.html", token=token)
