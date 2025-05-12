@@ -56,7 +56,13 @@ def honeypot_login():
 from dotenv import load_dotenv
 load_dotenv()
 
-app = Flask(__name__, template_folder="web_interface/templates")
+app = Flask(
+    __name__,
+    template_folder='web_interface/templates',
+    static_folder='web_interface/static'
+)
+
+
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
 csrf = CSRFProtect(app)  # CSRF protection
@@ -67,6 +73,14 @@ limiter = Limiter(       # Rate limiting
 )
 
 secret_key = os.getenv("FLASK_SECRET_KEY")
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
 
 @app.route("/admin/invite", methods=["GET", "POST"])
 @jwt_required
