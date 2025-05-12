@@ -121,30 +121,33 @@ def mfa_setup():
     user_id = pending["user_id"]
     email = pending["email"]
 
-    # --- Generate MFA Secret ---
+    # Generate MFA Secret
     secret = pyotp.random_base32()
 
-    # --- Create otpauth URI (used by Microsoft/Google Authenticator) ---
+    # Create otpauth URI (used by Microsoft/Google Authenticator)
     uri = pyotp.TOTP(secret).provisioning_uri(
         name=email,  # shown in the MFA app
         issuer_name="SecureCareApp"
     )
 
-    # --- Save to Supabase ---
+    # Save to Supabase
     supabase.table("users").update({"mfa_secret": secret}).eq("id", user_id).execute()
 
-    # --- Save QR to /security_protocols/mfa/static/qr_<user_id>.png ---
+    # Save QR to /security_protocols/mfa/static/qr_<user_id>.png
     qr_filename = f"qr_{user_id}.png"
     app_root = os.getcwd()
     static_path = os.path.join(app_root, "security_protocols", "mfa", "static")
-    os.makedirs(static_path, exist_ok=True)
+    os.makedirs(static_path, exist_ok=True)  # Ensure the directory exists
     qr_path = os.path.join(static_path, qr_filename)
 
     qr = pyqrcode.create(uri)
-    qr.png(qr_path, scale=6)
+    qr.png(qr_path, scale=6)  # Increase scale for better visibility
 
-    # --- Render page with code and optional QR ---
+    # Render page with code and QR
     return render_template("mfa_setup_code.html", secret=secret, uri=uri, user_id=user_id)
+
+# Ensure the MFA template clearly shows the QR code
+# Modifications to web_interface/templates/mfa_setup_code.html
 
 @app.route("/mfa", methods=["GET"])
 def mfa_page():
@@ -207,24 +210,26 @@ def login():
 
         if auth_response.session and auth_response.session.access_token:
             user = supabase.table("users").select("id, role, mfa_secret").eq("email", email).single().execute()
-              # 👈 Include mfa_secret
-
+              
             if not user.data:
                 return "User not registered in system", 403
             
-            log_activity(user.data["id"], "Successful login", email=email)  # ✅ Add this line
+            log_activity(user.data["id"], "Successful login", email=email)
 
-            # --- [MFA Trigger] ---
+            # Store user info in session for MFA verification
             session["pending_user"] = {
                 "email": email,
                 "user_id": user.data["id"],
                 "access_token": auth_response.session.access_token
             }
             
-            if not user.data.get("mfa_secret"):  # 👈 NEW: Check for secret here
-                return redirect("/mfa/setup")  # 👈 Direct to setup if missing
+            # Check if user has MFA set up
+            if not user.data.get("mfa_secret"):
+                # First-time user needs to set up MFA
+                return redirect("/mfa/setup")  # Redirects to MFA setup
             else:
-                return redirect("/mfa")
+                # Existing user with MFA already set up
+                return redirect("/mfa")  # Redirects to MFA verification
 
         else:
             log_activity(None, "Failed login attempt", email=email)
@@ -234,7 +239,9 @@ def login():
         print(f"Login error: {e}")
         log_activity(None, "Failed login attempt", email=email)
         return "Invalid credentials", 403
-    
+
+# Ensure the MFA setup route generates a clear QR code and saves it properly
+
 @app.route("/forgot-password", methods=["GET", "POST"])
 @limiter.limit("5 per minute")  # Prevent abuse
 def forgot_password():

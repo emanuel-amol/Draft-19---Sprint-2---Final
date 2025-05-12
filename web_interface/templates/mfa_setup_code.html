@@ -8,6 +8,25 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='forms.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <style>
+        .qr-code img {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 200px;
+        }
+        .setup-steps {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 78, 124, 0.05);
+            border-radius: 5px;
+        }
+        .setup-steps ol {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+    </style>
 </head>
 <body>
     <header class="navbar">
@@ -22,8 +41,15 @@
         <div class="setup-card" data-aos="fade-up" data-aos-duration="800">
             <h2>Set Up Multi-Factor Authentication</h2>
             
-            <!-- Instructions -->
-            <p class="form-description">Scan this QR code with your authenticator app (like Google Authenticator, Authy, or Microsoft Authenticator)</p>
+            <div class="setup-steps">
+                <h3>Follow these steps:</h3>
+                <ol>
+                    <li>Download an authenticator app if you don't have one (Microsoft Authenticator, Google Authenticator, or Authy)</li>
+                    <li>Scan the QR code below with your authenticator app</li>
+                    <li>Or manually enter the secret code into your app</li>
+                    <li>Once set up, click "Continue" to verify your code</li>
+                </ol>
+            </div>
             
             <!-- QR Code -->
             <div class="qr-code">
@@ -33,14 +59,31 @@
             <!-- Secret Code -->
             <p>Or manually enter this code in your authenticator app:</p>
             <div class="secret-code">{{ secret }}</div>
+            <p class="hint">(Click the code to copy)</p>
             
             <!-- Continue Button -->
-            <a href="/mfa" id="continue-btn" class="continue-btn">I've set up MFA. Continue to Login</a>
+            <a href="/mfa" id="continue-btn" class="continue-btn">I've set up MFA. Continue to Verification</a>
         </div>
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="{{ url_for('static', filename='notifications.js') }}"></script>
     <script src="{{ url_for('static', filename='mfa-setup.js') }}"></script>
+    <script>
+        // Add click-to-copy functionality for the secret code
+        document.querySelector('.secret-code').addEventListener('click', function() {
+            const text = this.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccessNotification('Secret code copied to clipboard', 2000);
+            }).catch(err => {
+                showErrorNotification('Could not copy text: ' + err);
+            });
+        });
+        
+        // Show initial notification with instructions
+        document.addEventListener('DOMContentLoaded', function() {
+            showInfoNotification('For security, you need to set up MFA before accessing the system', 5000);
+        });
+    </script>
 </body>
 </html>
