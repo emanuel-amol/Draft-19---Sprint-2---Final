@@ -1,11 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MFA Verification - ElderSafe Connect</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
@@ -22,33 +22,28 @@
             <h2>Multi-Factor Authentication</h2>
             
             <div class="button-row">
-                <button id="show-otp-btn" class="option-btn" onclick="showOTP()">Verify with Code</button>
+                <button id="show-otp-btn" class="option-btn active">Verify with Code</button>
             </div>
 
             <!-- OTP Verification -->
             <div id="mfa-section">
-                <form method="POST" action="/mfa/validate">
+                <form id="mfa-form" method="POST" action="/mfa/validate">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="user_id" value="{{ user_id }}">
                     
                     <div class="form-group">
                         <label for="otp">Enter OTP:</label>
-                        <input type="text" id="otp" name="otp" required>
+                        <input type="text" id="otp" name="otp" required autofocus>
                     </div>
                     
                     <button type="submit" class="mfa-btn">Verify</button>
                 </form>
-                {% if error %}<p class="error-msg">{{ error }}</p>{% endif %}
-            </div>
-
-            <!-- QR Section (hidden by default) -->
-            <div id="qr-section" style="display: none;">
-                <!-- QR code would go here -->
             </div>
         </div>
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mfa.js') }}"></script>
 </body>
 </html>

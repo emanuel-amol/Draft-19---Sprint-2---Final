@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - ElderSafe Connect</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
@@ -20,45 +21,26 @@
         <div class="login-card" data-aos="fade-up" data-aos-duration="800">
             <h2>Login</h2>
             
-            <div id="error-message" class="error-message" style="display: none;">
-                Invalid credentials
-            </div>
-            
-            {% if message %}
-                <p>{{ message }}</p>
-                <form method="get">
-                    <button type="submit">Login</button>
-                </form>
-            {% else %}
-                <form method="post" action="/login">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" required>
-                    </div>
-                    <div style="text-align: right; margin-top: -0.5rem; margin-bottom: 1rem;">
-                        <a href="{{ url_for('forgot_password') }}" style="font-size: 0.9rem; color: var(--color-secondary);">Forgot Password?</a>
-                    </div>
-                    <button type="submit" class="login-btn">Log In</button>
-                </form>
-            {% endif %}
+            <form id="login-form" method="post" action="/login">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div style="text-align: right; margin-top: -0.5rem; margin-bottom: 1rem;">
+                    <a href="{{ url_for('forgot_password') }}" class="forgot-password">Forgot Password?</a>
+                </div>
+                <button type="submit" class="login-btn">Log In</button>
+            </form>
         </div>
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
-    <script>
-        // Check for URL parameters indicating login error
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('error')) {
-                document.getElementById('error-message').style.display = 'block';
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>

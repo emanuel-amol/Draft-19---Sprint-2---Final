@@ -1,11 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MFA Setup - ElderSafe Connect</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
@@ -22,7 +23,7 @@
             <h2>Set Up Multi-Factor Authentication</h2>
             
             <!-- Instructions -->
-            <p>Scan this QR code with your authenticator app (like Google Authenticator, Authy, or Microsoft Authenticator)</p>
+            <p class="form-description">Scan this QR code with your authenticator app (like Google Authenticator, Authy, or Microsoft Authenticator)</p>
             
             <!-- QR Code -->
             <div class="qr-code">
@@ -34,11 +35,12 @@
             <div class="secret-code">{{ secret }}</div>
             
             <!-- Continue Button -->
-            <a href="/mfa" class="continue-btn">I've set up MFA. Continue to Login</a>
+            <a href="/mfa" id="continue-btn" class="continue-btn">I've set up MFA. Continue to Login</a>
         </div>
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mfa-setup.js') }}"></script>
 </body>
 </html>
