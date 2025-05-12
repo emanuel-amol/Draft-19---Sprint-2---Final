@@ -46,14 +46,14 @@ def verify_invite_token(token: str):
 # Step 3: Complete registration with Supabase Auth
 @jwt_required
 @mfa_required
-def complete_registration(token: str, password: str):
-    # Validate password complexity first
-    
-    if check_pwned_password(password):
-        raise Exception("Password has been found in a known data breach. Please choose a more secure password.")
+# Updated security_protocols/rbac/invite.py (partial - complete_registration function only)
 
-    if len(password) < 8:
-        raise Exception("Password must be at least 8 characters")
+def complete_registration(token: str, password: str):
+    """
+    Complete user registration with token verification and password validation
+    """
+    # Import password policy verification
+    from security_protocols.passwords.password_policy import enforce_password_policy
     
     # Verify the invite token
     invite = verify_invite_token(token)
@@ -62,13 +62,20 @@ def complete_registration(token: str, password: str):
 
     email = invite['email']
     role = invite['role']
+    
+    # Enforce password policy - this will raise ValueError if invalid
+    try:
+        enforce_password_policy(password)
+    except ValueError as e:
+        # Reformat the error message for better display
+        raise Exception(str(e))
 
     try:
         # Create Auth user
-        # ✅ Hash password locally for storage (not for Supabase)
+        # Hash password locally for storage (not for Supabase)
         hashed_pw = hash_password(password)
 
-        # ✅ Register user with Supabase (Supabase handles its own hashing)
+        # Register user with Supabase (Supabase handles its own hashing)
         auth_response = supabase.auth.sign_up({
             "email": email,
             "password": password
@@ -79,16 +86,12 @@ def complete_registration(token: str, password: str):
             error_msg = auth_response.error.message if auth_response.error else "Unknown auth error"
             raise Exception(f"Auth registration failed: {error_msg}")
 
-        # Check email confirmation status
-        if not auth_response.user.email_confirmed_at:
-            raise Exception("Email confirmation required. Check your inbox.")
-
         # Insert into users table with explicit validation
         user_response = supabase.table("users").insert({
             "id": auth_response.user.id,
             "email": email,
             "role": role,
-            "hashed_pw": hashed_pw,  # ✅ Local hashed password storage
+            "hashed_pw": hashed_pw,  # Local hashed password storage
             "created_at": datetime.utcnow().isoformat()
         }).execute()
 
@@ -96,17 +99,7 @@ def complete_registration(token: str, password: str):
         if not user_response.data:
             raise Exception("Failed to create user profile in database")
 
-# ✅ Now safe to mark invite as used
-        mark_token_used(token)
-
-        return {
-        "success": True,
-        "user_id": auth_response.user.id,
-        "email": email,
-        "role": role
-}
-
-        # Only mark token used after successful registration
+        # Now safe to mark invite as used
         mark_token_used(token)
 
         return {
@@ -126,7 +119,6 @@ def complete_registration(token: str, password: str):
 
         # Re-raise the original error with context
         raise Exception(f"Registration failed: {str(e)}") from e
-
 # Step 4 (Optional): For inserting user via a passed-in token (e.g. JWT login flow)
 @jwt_required
 @mfa_required

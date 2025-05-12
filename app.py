@@ -279,6 +279,9 @@ def forgot_password():
 @app.route("/reset-password/<token>", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
 def reset_password(token):
+    # Import password policy verification
+    from security_protocols.passwords.password_policy import enforce_password_policy
+    
     # Verify the token
     from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
     s = URLSafeTimedSerializer(secret_key)
@@ -296,19 +299,13 @@ def reset_password(token):
         new_password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
         
-        # Validate password
-        if len(new_password) < 8:
-            return render_template("reset_password.html", token=token, error="Password must be at least 8 characters.")
-        
+        # Validate password match
         if new_password != confirm_password:
             return render_template("reset_password.html", token=token, error="Passwords do not match.")
         
         try:
-            # Check if password is in breach database
-            from security_protocols.passwords.hibp_checker import check_pwned_password
-            if check_pwned_password(new_password):
-                return render_template("reset_password.html", token=token, 
-                                    error="This password has been found in data breaches. Please choose a more secure password.")
+            # Enforce password policy
+            enforce_password_policy(new_password)
             
             # Get the user
             user = get_user_by_email(email)
@@ -332,7 +329,7 @@ def reset_password(token):
                 # Log the password reset
                 log_activity(user["id"], "Password reset successful", email=email)
                 
-                # Redirect to success page or login
+                # Redirect to success page
                 return render_template("reset_password_success.html")
                 
             except Exception as e:
@@ -341,6 +338,11 @@ def reset_password(token):
                 log_activity(None, f"Password reset failed: {str(e)}", email=email)
                 return render_template("reset_password.html", token=token, 
                                     error=f"An error occurred: {str(e)}")
+                                    
+        except ValueError as e:
+            # Password policy violation
+            return render_template("reset_password.html", token=token, error=str(e))
+            
         except Exception as outer_e:
             # Log any outer exceptions for debugging
             print(f"Outer password reset error: {outer_e}")
