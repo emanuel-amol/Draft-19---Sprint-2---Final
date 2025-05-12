@@ -233,6 +233,114 @@ def login():
         print(f"Login error: {e}")
         log_activity(None, "Failed login attempt", email=email)
         return "Invalid credentials", 403
+    
+@app.route("/forgot-password", methods=["GET", "POST"])
+@limiter.limit("5 per minute")  # Prevent abuse
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email")
+        
+        # First, check if user exists
+        user = get_user_by_email(email)
+        if not user:
+            # We don't reveal if user exists or not for security
+            return render_template("forgot_password.html", 
+                                message="If your email is registered, you'll receive a password reset link.")
+
+        # Generate secure token using itsdangerous
+        from itsdangerous import URLSafeTimedSerializer
+        s = URLSafeTimedSerializer(secret_key)
+        token = s.dumps(email, salt="password-reset")
+        
+        # Create reset link with token
+        reset_link = url_for("reset_password", token=token, _external=True)
+        
+        # Import the password reset email function
+        from security_protocols.password_reset.email_sender import send_password_reset_email
+        
+        # Send the reset email
+        send_success = send_password_reset_email(email, reset_link)
+        
+        # For security reasons, always show the same message whether the email exists or not
+        message = "If your email is registered, you'll receive a password reset link."
+        if not send_success:
+            # Log the failure but don't reveal to user
+            print(f"Failed to send password reset email to {email}")
+            log_activity(None, "Failed to send password reset email", email=email)
+        else:
+            log_activity(None, "Password reset requested", email=email)
+            
+        return render_template("forgot_password.html", message=message)
+
+    # GET request - show the form
+    return render_template("forgot_password.html")
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+@limiter.limit("5 per minute")  # Prevent abuse
+def reset_password(token):
+    # Verify the token
+    from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+    s = URLSafeTimedSerializer(secret_key)
+    
+    try:
+        # Token expires after 1 hour (3600 seconds)
+        email = s.loads(token, salt="password-reset", max_age=3600)
+    except SignatureExpired:
+        return render_template("reset_password_error.html", error="This password reset link has expired.")
+    except BadSignature:
+        return render_template("reset_password_error.html", error="Invalid reset link.")
+    
+    # Handle form submission
+    if request.method == "POST":
+        new_password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+        
+        # Validate password
+        if len(new_password) < 8:
+            return render_template("reset_password.html", token=token, error="Password must be at least 8 characters.")
+        
+        if new_password != confirm_password:
+            return render_template("reset_password.html", token=token, error="Passwords do not match.")
+        
+        # Check if password is in breach database
+        from security_protocols.passwords.hibp_checker import check_pwned_password
+        if check_pwned_password(new_password):
+            return render_template("reset_password.html", token=token, 
+                                error="This password has been found in data breaches. Please choose a more secure password.")
+        
+        # Get the user
+        user = get_user_by_email(email)
+        if not user:
+            return render_template("reset_password_error.html", error="User not found.")
+        
+        try:
+            # Hash the password using our password hasher
+            from security_protocols.passwords.password_hasher import hash_password
+            hashed_password = hash_password(new_password)
+            
+            # Update the hashed password in our users table
+            supabase.table("users").update({"hashed_pw": hashed_password}).eq("id", user["id"]).execute()
+            
+            # Update the password in Supabase Auth
+            supabase.auth.admin.update_user_by_id(
+                user["id"],
+                {"password": new_password}
+            )
+            
+            # Log the password reset
+            log_activity(user["id"], "Password reset successful", email=email)
+            
+            # Redirect to success page or login
+            return render_template("reset_password_success.html")
+            
+        except Exception as e:
+            print(f"Password reset error: {e}")
+            log_activity(None, f"Password reset failed: {str(e)}", email=email)
+            return render_template("reset_password.html", token=token, 
+                                  error="An error occurred. Please try again.")
+    
+    # GET request - show the reset form
+    return render_template("reset_password.html", token=token)
 
 @app.route("/register", methods=["GET", "POST"])
 @limiter.limit("3600 per hour")
