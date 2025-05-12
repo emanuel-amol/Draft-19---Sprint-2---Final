@@ -1,28 +1,44 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>MFA Setup</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .qr-code { margin: 20px 0; }
-        .secret-code { font-family: monospace; background: #f0f0f0; padding: 10px; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Setup - ElderSafe Connect</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
-    <h2>Set Up Multi-Factor Authentication</h2>
+    <header class="navbar">
+        <div class="site-title">ElderSafe Connect</div>
+        <div class="nav-group">
+            <a href="{{ url_for('about') }}" class="nav-btn">About</a>
+            <a href="{{ url_for('home') }}" class="nav-btn">Home</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="setup-card" data-aos="fade-up" data-aos-duration="800">
+            <h2>Set Up Multi-Factor Authentication</h2>
+            
+            <!-- Instructions -->
+            <p>Scan this QR code with your authenticator app (like Google Authenticator, Authy, or Microsoft Authenticator)</p>
+            
+            <!-- QR Code -->
+            <div class="qr-code">
+                <img src="/qr/qr_{{ user_id }}.png" alt="MFA QR Code">
+            </div>
+            
+            <!-- Secret Code -->
+            <p>Or manually enter this code in your authenticator app:</p>
+            <div class="secret-code">{{ secret }}</div>
+            
+            <!-- Continue Button -->
+            <a href="/mfa" class="continue-btn">I've set up MFA. Continue to Login</a>
+        </div>
+    </main>
     
-    <!-- Show QR Code -->
-    <div class="qr-code">
-        <img src="/qr/qr_{{ user_id }}.png" alt="MFA QR Code">
-    </div>
-
-    <!-- Show Secret Code -->
-    <p>Or manually enter this code in your authenticator app:</p>
-    <div class="secret-code">{{ secret }}</div>
-
-    <p style="margin-top: 30px;">
-        <a href="/mfa">I've set up MFA. Continue to Login</a>
-    </p>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
