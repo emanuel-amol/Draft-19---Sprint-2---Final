@@ -109,7 +109,19 @@ from flask import send_file
 
 @app.route('/qr/<filename>')
 def serve_qr(filename):
-    return send_from_directory(os.path.join(app.root_path, "security_protocols", "mfa", "static"), filename)
+    # Construct the full path
+    full_path = os.path.join(app.root_path, "security_protocols", "mfa", "static", filename)
+    
+    # Debug logging
+    print(f"Requested QR image: {filename}")
+    print(f"Looking for file at: {full_path}")
+    print(f"File exists: {os.path.exists(full_path)}")
+    
+    # Include explicit MIME type
+    return send_from_directory(
+        os.path.join(app.root_path, "security_protocols", "mfa", "static"),
+        filename
+    )
 
 
 @app.route("/mfa/setup", methods=["GET"])
@@ -144,7 +156,8 @@ def mfa_setup():
     qr.png(qr_path, scale=6)  # Increase scale for better visibility
 
     # Render page with code and QR
-    return render_template("mfa_setup_code.html", secret=secret, uri=uri, user_id=user_id)
+    return render_template("mfa_setup_code.html", secret=secret, user_id=user_id, qr_filename=qr_filename)
+
 
 # Ensure the MFA template clearly shows the QR code
 # Modifications to web_interface/templates/mfa_setup_code.html
