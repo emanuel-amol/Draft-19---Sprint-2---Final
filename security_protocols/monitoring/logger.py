@@ -29,8 +29,8 @@ def log_activity(user_id, action, email=None):
     auth_logs.append(log_entry)
     
     # For production, you might want to also write to a file
-    # with open("security_protocols/monitoring/activity_logs.log", "a") as f:
-    #     f.write(f"{timestamp} | User: {user_id} | {action} | {email or ''}\n")
+    with open("security_protocols/monitoring/activity_logs.log", "a") as f:
+        f.write(f"{timestamp} | User: {user_id} | {action} | {email or ''}\n")
     
     return log_entry
 

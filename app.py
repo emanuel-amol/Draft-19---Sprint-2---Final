@@ -496,6 +496,7 @@ def admin_dashboard():
         invite_link=invite_link
     )
 
+
 @app.route("/care_plan_dashboard")
 @jwt_required
 @mfa_required
