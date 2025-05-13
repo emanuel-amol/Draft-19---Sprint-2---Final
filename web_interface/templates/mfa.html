@@ -20,35 +20,66 @@
     <main>
         <div class="mfa-card" data-aos="fade-up" data-aos-duration="800">
             <h2>Multi-Factor Authentication</h2>
-            
-            <div class="button-row">
-                <button id="show-otp-btn" class="option-btn active">Verify with Code</button>
-            </div>
-            <!-- Add this after the form or wherever you want the button to appear -->
-<div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
-    <p style="margin-bottom: 10px; color: #666;">Need to set up MFA?</p>
-    <a href="/mfa/setup" style="display: inline-block; background-color: #f4c542; color: #004e7c; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: bold;">Go to MFA Setup</a>
-</div>
+            <p class="form-description">Enter the verification code from your authenticator app to proceed.</p>
 
-            <!-- OTP Verification -->
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+            
             <div id="mfa-section">
                 <form id="mfa-form" method="POST" action="/mfa/validate">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="user_id" value="{{ user_id }}">
                     
                     <div class="form-group">
-                        <label for="otp">Enter OTP:</label>
-                        <input type="text" id="otp" name="otp" required autofocus>
+                        <label for="otp">Enter OTP Code:</label>
+                        <input type="text" id="otp" name="otp" required autofocus autocomplete="off" 
+                               maxlength="6" pattern="[0-9]{6}" inputmode="numeric" 
+                               placeholder="6-digit code">
+                        <div class="form-hint">Enter the 6-digit code from your authenticator app</div>
                     </div>
                     
                     <button type="submit" class="mfa-btn">Verify</button>
                 </form>
+
+                <div class="mfa-options">
+                    <p>Need to set up MFA?</p>
+                    <a href="/mfa/setup?force=true" class="setup-link">Go to MFA Setup</a>
+                </div>
             </div>
         </div>
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="{{ url_for('static', filename='notifications.js') }}"></script>
-    <script src="{{ url_for('static', filename='mfa.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize AOS
+            AOS.init({ once: true });
+            
+            // Auto-format OTP input (spaces after every 3 digits)
+            const otpInput = document.getElementById('otp');
+            if (otpInput) {
+                // Focus the OTP input field
+                otpInput.focus();
+                
+                // Handle form submission
+                document.getElementById('mfa-form').addEventListener('submit', function(e) {
+                    const otp = otpInput.value.trim();
+                    
+                    // Basic validation
+                    if (!otp || otp.length !== 6 || !/^\d+$/.test(otp)) {
+                        e.preventDefault();
+                        showErrorNotification('Please enter a valid 6-digit OTP code.');
+                        otpInput.focus();
+                    } else {
+                        // Show loading state
+                        document.querySelector('.mfa-btn').textContent = 'Verifying...';
+                        document.querySelector('.mfa-btn').disabled = true;
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

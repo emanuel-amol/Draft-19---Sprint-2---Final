@@ -324,3 +324,50 @@
 2025-05-13 21:43:45 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Redirecting to MFA verification | agedcare66.adnim@gmail.com
 2025-05-13 21:45:49 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Login attempt from IP: 100.90.248.197, User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 - Successful login | agedcare66.adnim@gmail.com
 2025-05-13 21:45:49 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Redirecting to MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 21:50:07 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Login attempt from IP: 127.0.0.1, User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 - Successful login | agedcare66.adnim@gmail.com
+2025-05-13 21:50:07 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Redirecting to MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 21:51:11 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | MFA secret generated and saved | agedcare66.adnim@gmail.com
+2025-05-13 21:51:37 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | MFA verification successful | agedcare66.adnim@gmail.com
+2025-05-13 21:51:37 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT generated after MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 21:51:37 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:51:37 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:51:37 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:52:16 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Login attempt from IP: 127.0.0.1, User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 - Successful login | agedcare66.adnim@gmail.com
+2025-05-13 21:52:16 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Redirecting to MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 21:52:25 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | MFA verification successful | agedcare66.adnim@gmail.com
+2025-05-13 21:52:25 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT generated after MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 21:52:25 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:52:25 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:52:25 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:57:10 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Login attempt from IP: 127.0.0.1, User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 - Successful login | agedcare66.adnim@gmail.com
+2025-05-13 21:57:10 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Redirecting to MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 21:57:14 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | MFA secret generated and saved | agedcare66.adnim@gmail.com
+2025-05-13 21:57:31 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | MFA verification successful | agedcare66.adnim@gmail.com
+2025-05-13 21:57:31 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT generated after MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 21:57:31 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:57:32 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:57:47 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:57:47 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:57:51 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Generated invite for dfv@gmail.com with role admin | 
+2025-05-13 21:57:55 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:58:05 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:58:05 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:58:05 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:58:07 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:58:51 | User: None | Password reset requested | agedcare66.carer@gmail.com
+2025-05-13 21:59:11 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 21:59:55 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Login attempt from IP: 127.0.0.1, User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 - Successful login | agedcare66.adnim@gmail.com
+2025-05-13 21:59:55 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Redirecting to MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 22:00:01 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | MFA verification successful | agedcare66.adnim@gmail.com
+2025-05-13 22:00:01 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT generated after MFA verification | agedcare66.adnim@gmail.com
+2025-05-13 22:00:01 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 22:00:01 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 22:00:10 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 22:00:10 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 22:00:14 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | Generated invite for axc@gmail.com with role nurse | 
+2025-05-13 22:00:21 | User: None | Unauthorized: No JWT presented | 
+2025-05-13 22:00:26 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 22:00:47 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | JWT validated | agedcare66.adnim@gmail.com
+2025-05-13 22:00:47 | User: fbaaf8a8-134e-4d18-8cf2-89387778ffc6 | User logged out | agedcare66.adnim@gmail.com
+2025-05-13 22:01:04 | User: None | Password reset requested | agedcare66.carer@gmail.com
+2025-05-13 22:01:42 | User: None | Unauthorized: No JWT presented | 
