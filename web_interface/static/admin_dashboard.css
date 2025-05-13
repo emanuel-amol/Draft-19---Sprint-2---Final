@@ -1,9 +1,12 @@
 /* Admin Dashboard Styles */
+
+/* Log section styles */
 .table-container {
     overflow-x: auto;
     margin: 1rem 0;
 }
 
+/* Table styling */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -123,4 +126,20 @@ tr:hover {
     resize: none;
     word-break: break-all;
     height: 60px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    th, td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .collapsible {
+        padding: 0.5rem 0.75rem;
+    }
 }
