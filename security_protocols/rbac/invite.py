@@ -93,7 +93,6 @@ def complete_registration(token: str, password: str):
             "role": role,
             "hashed_pw": hashed_pw,  # Local hashed password storage
             "created_at": datetime.utcnow().isoformat(),
-            "mfa_secret": None
         }).execute()
 
         # Verify users table insertion
