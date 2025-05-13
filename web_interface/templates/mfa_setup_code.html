@@ -55,6 +55,79 @@
             <div class="qr-code">
                 <img src="/qr/qr_{{ user_id }}.png" alt="MFA QR Code">
             </div>
+
+            <!-- Add this after the existing QR code display section -->
+<div class="button-row" style="margin-top: 20px;">
+    <button id="email-qr-btn" class="option-btn">Email QR Code to Me</button>
+    <a href="/qr-link/{{ user_id }}" target="_blank" id="copy-link-btn" class="option-btn">View QR in Browser</a>
+</div>
+
+<!-- After the QR code section in mfa_setup_code.html, add this: -->
+<div class="action-buttons" style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+    <a href="/mfa" id="continue-btn" class="continue-btn">Continue to Verification</a>
+    <button id="email-qr-btn" class="option-btn">Email Me This QR Code</button>
+</div>
+
+<div class="alternative-methods" style="margin-top: 30px; text-align: center;">
+    <p>Having trouble setting up MFA?</p>
+    <div class="button-row" style="margin-top: 10px;">
+        <a href="/qr-link/{{ user_id }}" target="_blank" id="copy-link-btn" class="option-btn">Open QR in New Tab</a>
+    </div>
+</div>
+
+<a href="/mfa" id="continue-btn" class="continue-btn">I've scanned the QR code - Continue to Verification</a>
+
+<!-- Add this script at the bottom of the file, before the closing </body> tag -->
+<script>
+    document.getElementById('email-qr-btn').addEventListener('click', function() {
+        // Display a loading message
+        this.textContent = 'Sending...';
+        this.disabled = true;
+        
+        // Make AJAX request to send email
+        fetch('/mfa/email-qr/{{ user_id }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessNotification('QR code sent to your email!', 5000);
+            } else {
+                showErrorNotification('Failed to send QR code: ' + data.message);
+            }
+            
+            // Reset button
+            this.textContent = 'Email QR Code to Me';
+            this.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorNotification('An error occurred while sending the email');
+            
+            // Reset button
+            this.textContent = 'Email QR Code to Me';
+            this.disabled = false;
+        });
+    });
+    
+    // Add copy functionality for the QR link
+    document.getElementById('copy-link-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const link = this.href;
+        navigator.clipboard.writeText(link).then(() => {
+            showSuccessNotification('Link copied to clipboard!', 2000);
+            window.open(link, '_blank');
+        }).catch(err => {
+            showErrorNotification('Could not copy link: ' + err);
+            window.open(link, '_blank');
+        });
+    });
+</script>
             
             <!-- Secret Code -->
             <p>Or manually enter this code in your authenticator app:</p>

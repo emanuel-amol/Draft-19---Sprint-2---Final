@@ -133,35 +133,47 @@ def mfa_setup():
     user_id = pending["user_id"]
     email = pending["email"]
 
-    # Generate MFA Secret
-    secret = pyotp.random_base32()
+    # Check if MFA is already set up
+    result = supabase.table("users").select("mfa_secret").eq("id", user_id).single().execute()
+    
+    # IMPORTANT: Only generate a new secret if there isn't one already
+    # or if it's empty. Don't redirect to /mfa if we're on the setup page.
+    if result.data and result.data.get("mfa_secret"):
+        print(f"DEBUG: MFA secret already exists for {user_id}: {result.data.get('mfa_secret')}")
+        # DO NOT REDIRECT HERE - This was causing the problem
+        # Let the user see the QR code page
+    else:
+        # Generate a new MFA Secret only if needed
+        secret = pyotp.random_base32()
+        print(f"DEBUG: Generating new MFA secret for {user_id}: {secret}")
+        
+        # Create otpauth URI
+        uri = pyotp.TOTP(secret).provisioning_uri(
+            name=email,  # shown in the MFA app
+            issuer_name="SecureCareApp"
+        )
+        
+        # Save to Supabase
+        supabase.table("users").update({"mfa_secret": secret}).eq("id", user_id).execute()
+        log_activity(user_id, "MFA secret generated and saved", email=email)
+        
+        # Save QR as image
+        qr_filename = f"qr_{user_id}.png"
+        app_root = os.getcwd()
+        static_path = os.path.join(app_root, "security_protocols", "mfa", "static")
+        os.makedirs(static_path, exist_ok=True)
+        qr_path = os.path.join(static_path, qr_filename)
+        
+        qr = pyqrcode.create(uri)
+        qr.png(qr_path, scale=6)
 
-    # Create otpauth URI (used by Microsoft/Google Authenticator)
-    uri = pyotp.TOTP(secret).provisioning_uri(
-        name=email,  # shown in the MFA app
-        issuer_name="SecureCareApp"
-    )
-
-    # Save to Supabase
-    supabase.table("users").update({"mfa_secret": secret}).eq("id", user_id).execute()
-
-    # Save QR to /security_protocols/mfa/static/qr_<user_id>.png
+    # Get the MFA secret
+    result = supabase.table("users").select("mfa_secret").eq("id", user_id).single().execute()
+    secret = result.data.get("mfa_secret")
     qr_filename = f"qr_{user_id}.png"
-    app_root = os.getcwd()
-    static_path = os.path.join(app_root, "security_protocols", "mfa", "static")
-    os.makedirs(static_path, exist_ok=True)  # Ensure the directory exists
-    qr_path = os.path.join(static_path, qr_filename)
-
-    qr = pyqrcode.create(uri)
-    qr.png(qr_path, scale=6)  # Increase scale for better visibility
-
-    # Render page with code and QR
+    
+    # Always render the setup page
     return render_template("mfa_setup_code.html", secret=secret, user_id=user_id, qr_filename=qr_filename)
-
-
-# Ensure the MFA template clearly shows the QR code
-# Modifications to web_interface/templates/mfa_setup_code.html
-
 @app.route("/mfa", methods=["GET"])
 def mfa_page():
     pending = session.get("pending_user")
@@ -170,13 +182,20 @@ def mfa_page():
 
     user_id = pending["user_id"]
 
-    # --- Check if user has MFA secret ---
+    # Check if user has completed MFA setup
     result = supabase.table("users").select("mfa_secret").eq("id", user_id).single().execute()
-    if not result.data.get("mfa_secret"):
-        return redirect("/mfa/setup")  # 👈 Send to QR setup if none
-
-    return render_template("mfa.html", user_id=pending["user_id"])  # 👈 Just render the form
-
+    
+    print(f"DEBUG MFA Page: User {user_id} - MFA Secret: {result.data.get('mfa_secret') if result.data else 'None'}")
+    
+    # Redirect to setup if MFA not set up
+    if not result.data or not result.data.get("mfa_secret"):
+        print(f"DEBUG MFA Page: User {user_id} - No MFA secret found, redirecting to setup")
+        return redirect("/mfa/setup")
+        
+    # User may have just set up MFA but not verified yet
+    # Let them continue to verification
+    print(f"DEBUG MFA Page: User {user_id} - MFA verification screen")
+    return render_template("mfa.html", user_id=user_id)
 
 
 @app.route("/mfa/validate", methods=["POST"])
@@ -212,6 +231,43 @@ def mfa_validate():
             
         log_activity(user_id, f"MFA verification failed: {result['message']}", email=email)
         return render_template("mfa.html", error=result["message"], user_id=user_id)
+# Add these routes to app.py near other MFA-related routes
+from flask import jsonify
+from security_protocols.mfa.email_sender import send_qr_code_email
+
+@app.route("/mfa/email-qr/<user_id>", methods=["POST"])
+def email_qr_code(user_id):
+    # Get user's email from database
+    user = supabase.table("users").select("email").eq("id", user_id).single().execute()
+    if not user.data:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    
+    email = user.data["email"]
+    qr_filename = f"qr_{user_id}.png"
+    qr_path = os.path.join(app.root_path, "security_protocols", "mfa", "static", qr_filename)
+    
+    # Generate a temporary link to view the QR code
+    qr_link = url_for('serve_qr_link', user_id=user_id, _external=True)
+    
+    # Send email with QR code as attachment
+    success = send_qr_code_email(email, qr_path, qr_link)
+    
+    if success:
+        return jsonify({"success": True, "message": "QR code sent to your email"})
+    else:
+        return jsonify({"success": False, "message": "Failed to send email"}), 500
+
+@app.route("/qr-link/<user_id>")
+def serve_qr_link(user_id):
+    # This route serves the QR code as a standalone page
+    # Security check to verify user has access to this QR code
+    pending = session.get("pending_user")
+    if not pending or pending["user_id"] != user_id:
+        return "Unauthorized", 403
+        
+    return render_template("qr_code_view.html", user_id=user_id)
+
+# In app.py, replace the login route with this version:
 
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("500 per minute")
@@ -249,12 +305,17 @@ def login():
                 "access_token": auth_response.session.access_token
             }
             
-            # Check if user has MFA set up
-            if not user.data.get("mfa_secret"):
+            # Debug the MFA setup check
+            print(f"DEBUG: User {user.data['id']} - MFA Secret: {user.data.get('mfa_secret')}")
+            
+            # IMPORTANT: Added additional check to ensure empty strings don't count as valid secrets
+            if not user.data.get("mfa_secret") or user.data.get("mfa_secret") == "":
                 log_activity(user.data["id"], "Redirecting to MFA setup (first-time)", email=email)
+                print(f"DEBUG: User {user.data['id']} - Redirecting to MFA SETUP")
                 return redirect("/mfa/setup")  # Redirects to MFA setup
             else:
                 log_activity(user.data["id"], "Redirecting to MFA verification", email=email)
+                print(f"DEBUG: User {user.data['id']} - Redirecting to MFA verification")
                 return redirect("/mfa")  # Redirects to MFA verification
 
         else:
@@ -265,6 +326,7 @@ def login():
         error_message = str(e)
         log_activity(None, f"{log_message} - Failed login: {error_message}", email=email)
         return "Invalid credentials", 403
+    
 
 @app.route("/forgot-password", methods=["GET", "POST"])
 @limiter.limit("5 per minute")  # Prevent abuse

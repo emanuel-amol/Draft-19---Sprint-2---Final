@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MFA QR Code - ElderSafe Connect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .qr-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 450px;
+        }
+        .qr-code img {
+            max-width: 100%;
+            margin: 20px 0;
+        }
+        h1 {
+            color: var(--color-primary);
+            margin-bottom: 20px;
+        }
+        .instructions {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="qr-container">
+        <h1>Your MFA QR Code</h1>
+        <p>Scan this QR code with your authenticator app to set up MFA</p>
+        
+        <div class="qr-code">
+            <img src="/qr/qr_{{ user_id }}.png" alt="MFA QR Code">
+        </div>
+        
+        <div class="instructions">
+            <p>After scanning, close this window and return to the ElderSafe Connect setup page to complete your MFA setup.</p>
+        </div>
+    </div>
+</body>
+</html>
