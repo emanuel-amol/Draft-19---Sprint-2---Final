@@ -173,6 +173,7 @@ def mfa_validate():
     otp = data.get("otp").strip()
 
     if not user_id or not otp:
+        log_activity(None, "MFA validation failed: Missing user ID or OTP")
         return render_template("mfa.html", error="Missing user ID or OTP", user_id=user_id)
 
     result, status_code = verify_mfa_otp(user_id, otp)
@@ -180,18 +181,24 @@ def mfa_validate():
     if result["status"] == "success":
         user_info = supabase.table("users").select("email, role").eq("id", user_id).single().execute().data
 
-        log_activity(user_id, "Successful login", email=user_info["email"])  # ✅ Log AFTER MFA
-
+        log_activity(user_id, "MFA verification successful", email=user_info["email"])
 
         new_token = generate_jwt(user_id, user_info["role"], mfa_verified=True)
+        log_activity(user_id, "JWT generated after MFA verification", email=user_info["email"])
 
         resp = make_response(redirect(url_for("dashboard")))
         resp.set_cookie("access_token", new_token, httponly=True)
         return resp
-
-    return render_template("mfa.html", error=result["message"], user_id=user_id)
-
-
+    else:
+        # Log failed MFA attempts
+        try:
+            user_info = supabase.table("users").select("email").eq("id", user_id).single().execute().data
+            email = user_info["email"] if user_info else None
+        except Exception:
+            email = None
+            
+        log_activity(user_id, f"MFA verification failed: {result['message']}", email=email)
+        return render_template("mfa.html", error=result["message"], user_id=user_id)
 
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("500 per minute")
@@ -201,7 +208,12 @@ def login():
 
     email = request.form.get("email")
     password = request.form.get("password")
-
+    
+    # Log the login attempt (without recording the password)
+    client_ip = request.remote_addr
+    user_agent = request.headers.get("User-Agent", "Unknown")
+    log_message = f"Login attempt from IP: {client_ip}, User-Agent: {user_agent}"
+    
     try:
         auth_response = supabase.auth.sign_in_with_password({
             "email": email,
@@ -212,9 +224,10 @@ def login():
             user = supabase.table("users").select("id, role, mfa_secret").eq("email", email).single().execute()
               
             if not user.data:
+                log_activity(None, f"Failed login: User not registered in system", email=email)
                 return "User not registered in system", 403
             
-            log_activity(user.data["id"], "Successful login", email=email)
+            log_activity(user.data["id"], f"{log_message} - Successful login", email=email)
 
             # Store user info in session for MFA verification
             session["pending_user"] = {
@@ -225,22 +238,20 @@ def login():
             
             # Check if user has MFA set up
             if not user.data.get("mfa_secret"):
-                # First-time user needs to set up MFA
+                log_activity(user.data["id"], "Redirecting to MFA setup (first-time)", email=email)
                 return redirect("/mfa/setup")  # Redirects to MFA setup
             else:
-                # Existing user with MFA already set up
+                log_activity(user.data["id"], "Redirecting to MFA verification", email=email)
                 return redirect("/mfa")  # Redirects to MFA verification
 
         else:
-            log_activity(None, "Failed login attempt", email=email)
+            log_activity(None, f"{log_message} - Failed login: Invalid credentials", email=email)
             return "Invalid credentials", 403
 
     except Exception as e:
-        print(f"Login error: {e}")
-        log_activity(None, "Failed login attempt", email=email)
+        error_message = str(e)
+        log_activity(None, f"{log_message} - Failed login: {error_message}", email=email)
         return "Invalid credentials", 403
-
-# Ensure the MFA setup route generates a clear QR code and saves it properly
 
 @app.route("/forgot-password", methods=["GET", "POST"])
 @limiter.limit("5 per minute")  # Prevent abuse
@@ -411,41 +422,69 @@ def dashboard():
 
 @app.route("/logout")
 @jwt_required
-@mfa_required
 def logout():
-    log_activity(g.user_id, "Logged out")
+    user_id = g.user_id
+    user_email = None
+    
+    # Get the user's email for the log
+    try:
+        user = supabase.table("users").select("email").eq("id", user_id).single().execute().data
+        if user and "email" in user:
+            user_email = user["email"]
+    except Exception:
+        pass
+    
+    log_activity(user_id, "User logged out", email=user_email)
+    
+    # Clear cookies and redirect
     resp = redirect("/login")
     resp.delete_cookie('access_token')
     return resp
 
-@app.route("/admin_dashboard", methods=["GET", "POST"])
 
+@app.route("/admin_dashboard", methods=["GET", "POST"])
 @jwt_required
 @mfa_required
 def admin_dashboard():
     if g.role != "admin":
+        # Log unauthorized access attempts
+        log_activity(g.user_id, "Unauthorized attempt to access admin dashboard")
         return "Unauthorized", 403
     
     invite_link = None
     if request.method == "POST":
         email = request.form.get("email")
         role = request.form.get("role")
+        
+        # Validate user input
+        if not email or not role:
+            return "Missing required fields", 400
+            
+        if role not in ["admin", "nurse", "carer", "resident"]:
+            return "Invalid role", 400
+            
+        # Create invite token
         token = create_invite_token(email, role)
         invite_link = f"{request.host_url}register?token={token}"
 
+        # Send email and log the action
         send_invite_email(email, invite_link)
+        log_activity(g.user_id, f"Generated invite for {email} with role {role}")
     
-    user = supabase.table("users").select("*").eq("id", g.user_id).single().execute().data
+    # Get current user information
     user = supabase.table("users").select("*").eq("id", g.user_id).single().execute().data
     if not user or "email" not in user:
         user = {"email": "Unknown"}
 
-
+    # Get all users, residents, and logs
     users = get_all_users()
     residents = get_all_residents()
-    logs = get_logs()
-    honeypot_logs = get_honeypot_logs()  # You’ll need to create this
-    #return render_template("admin_dashboard.html", user=user, users=users, residents=residents, logs=logs, all_users=users, all_residents=residents, all_logs=logs, honeypot_logs=honeypot_logs)
+    
+    # Get the 100 most recent logs for display
+    logs = get_logs(100)
+    honeypot_logs = get_honeypot_logs(50)
+    
+    # Pass all necessary data to the template
     return render_template("admin_dashboard.html",
         user=user,
         users=users,
@@ -453,9 +492,8 @@ def admin_dashboard():
         logs=logs,
         all_users=users,
         all_residents=residents,
-        all_logs=logs,
         honeypot_logs=honeypot_logs,
-        invite_link=invite_link  # 👈 Pass this to the template
+        invite_link=invite_link
     )
 
 @app.route("/care_plan_dashboard")
